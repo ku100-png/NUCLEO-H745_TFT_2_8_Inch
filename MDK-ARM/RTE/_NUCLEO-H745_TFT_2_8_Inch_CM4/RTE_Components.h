@@ -4,7 +4,7 @@
  *      *** Do not modify ! ***
  *
  * Project: 'NUCLEO-H745_TFT_2_8_Inch' 
- * Target:  'NUCLEO-H745_TFT_2_8_Inch_CM7' 
+ * Target:  'NUCLEO-H745_TFT_2_8_Inch_CM4' 
  */
 
 #ifndef RTE_COMPONENTS_H
