@@ -5,9 +5,11 @@
  - "DrawGraphic"
  - "ShowImages"
  - "Touchscreen"
-	- "SDwriteFile"
- Push User button on the NUCLEO-H745-ZI-Q to switch next demo example.
- Parametrs of LCD display:
+ - "SDwriteFile".
+
+Push User button on the NUCLEO-H745-ZI-Q to switch next demo example.
+
+Parametrs of LCD display:
  - LCD тtype: TFT;
  - LCD interface: SPI;
  - LCD controller: ST7789;
