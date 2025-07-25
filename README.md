@@ -22,11 +22,12 @@ Parametrs of LCD display:
  - I/O voltage: 3.3/5 V;
  - Brand: Waveshare Electronics.
 <br>
- @par How to use it ?
-In order to make the program work, you must do the following :
+How to use it ?<br>
+<br>
+In order to make the program work, you should do the following :
  - Open Keil MDK-ARM toolchain
  - Rebuild all files
- - Load images into target memory
- - Run the demonstration
+ - Load images into microSD card
+ - Load the program and run the demonstration
 
  * <h3><center>by KULIKOV V.G. </center></h3>
