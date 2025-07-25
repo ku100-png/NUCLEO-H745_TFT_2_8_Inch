@@ -21,13 +21,13 @@ Parametrs of LCD display:
  - Modulu size: 73.3 х 55.3 mm;
  - I/O voltage: 3.3/5 V;
  - Brand: Waveshare Electronics.
-<br>
+
 How to use it ?<br>
-<br>
-In order to make the program work, you should do the following :
- - Open Keil MDK-ARM toolchain
- - Rebuild all files
- - Load images into microSD card
- - Load the program and run the demonstration
+
+In order to make the program work, you should do the following:
+ - Open Keil MDK-ARM toolchain;
+ - Rebuild all files;
+ - Load images into microSD card;
+ - Load the program and run the demonstration.
 
  * <h3><center>by KULIKOV V.G. </center></h3>
