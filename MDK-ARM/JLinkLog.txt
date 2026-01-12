@@ -1,0 +1,85 @@
+T0668 000:128.082   SEGGER J-Link V7.94g Log File
+T0668 000:128.445   DLL Compiled: Jan 24 2024 15:48:08
+T0668 000:128.470   Logging started @ 2025-08-06 07:24
+T0668 000:128.494   Process: C:\Keil_v5\UV4\UV4.exe
+T0668 000:128.530 - 128.518ms
+T0668 000:128.565 JLINK_SetWarnOutHandler(...)
+T0668 000:128.593 - 0.032ms
+T0668 000:128.620 JLINK_OpenEx(...)
+T0668 000:134.817   Firmware: J-Link Ultra V4 compiled Sep 22 2022 15:00:10
+T0668 000:135.990   Firmware: J-Link Ultra V4 compiled Sep 22 2022 15:00:10
+T0668 000:136.284   Decompressing FW timestamp took 169 us
+T0668 000:137.124   Hardware: V4.00
+T0668 000:137.139   S/N: 504302409
+T0668 000:137.147   OEM: SEGGER
+T0668 000:137.154   Feature(s): RDI, FlashBP, FlashDL, JFlash, GDB
+T0668 000:137.661   Bootloader: (Could not read)
+T0668 000:138.062   TELNET listener socket opened on port 19021
+T0668 000:138.442   WEBSRV WEBSRV_Init(): Starting webserver thread(s)
+T0668 000:138.760   WEBSRV Webserver running on local port 19080
+T0668 000:139.068   Looking for J-Link GUI Server exe at: C:\Keil_v5\ARM\Segger\JLinkGUIServer.exe
+T0668 000:139.247   Looking for J-Link GUI Server exe at: C:\Program Files\SEGGER\JLink_V794g\JLinkGUIServer.exe
+T0668 000:139.298   Forking J-Link GUI Server: C:\Program Files\SEGGER\JLink_V794g\JLinkGUIServer.exe
+T0668 000:148.001   J-Link GUI Server info: "J-Link GUI server V7.94g "
+T0668 000:148.559 - 19.925ms returns "O.K."
+T0668 000:148.584 JLINK_GetEmuCaps()
+T0668 000:148.595 - 0.008ms returns 0xB9FF7BBF
+T0668 000:148.604 JLINK_TIF_GetAvailable(...)
+T0668 000:148.753 - 0.148ms
+T0668 000:148.772 JLINK_SetErrorOutHandler(...)
+T0668 000:148.781 - 0.009ms
+T0668 000:148.821 JLINK_ExecCommand("ProjectFile = "C:\GitHub\NUCLEO-H745_TFT_2_8_Inch\MDK-ARM\JLinkSettings.ini"", ...). 
+T0668 000:165.573   Ref file found at: C:\Keil_v5\ARM\Segger\JLinkDevices.ref
+T0668 000:165.655   REF file references invalid XML file: C:\Program Files\SEGGER\JLink_V794g\JLinkDevices.xml
+T0668 000:166.537 - 17.719ms returns 0x00
+T0668 000:166.556 JLINK_ExecCommand("Device = STM32H745ZITx:CM7", ...). 
+T0668 015:300.775 - 15134.211ms returns 0xFFFFFFFF
+T0668 015:301.215 JLINK_ExecCommand("DisableConnectionTimeout", ...). 
+T0668 015:301.241 - 0.003ms returns 0x01
+T0668 015:301.251 JLINK_GetHardwareVersion()
+T0668 015:301.259 - 0.007ms returns 40000
+T0668 015:301.272 JLINK_GetDLLVersion()
+T0668 015:301.281 - 0.013ms returns 79407
+T0668 015:301.290 JLINK_GetOEMString(...)
+T0668 015:301.298 JLINK_GetFirmwareString(...)
+T0668 015:301.304 - 0.006ms
+T0668 015:301.316 JLINK_GetDLLVersion()
+T0668 015:301.322 - 0.005ms returns 79407
+T0668 015:301.327 JLINK_GetCompileDateTime()
+T0668 015:301.334 - 0.006ms
+T0668 015:301.342 JLINK_GetFirmwareString(...)
+T0668 015:301.348 - 0.006ms
+T0668 015:301.354 JLINK_GetHardwareVersion()
+T0668 015:301.359 - 0.004ms returns 40000
+T0668 015:301.367 JLINK_GetSN()
+T0668 015:301.373 - 0.006ms returns 504302409
+T0668 015:301.379 JLINK_GetOEMString(...)
+T0668 015:301.388 JLINK_TIF_Select(JLINKARM_TIF_JTAG)
+T0668 015:301.862 - 0.473ms returns 0x00
+T0668 015:301.874 JLINK_HasError()
+T0668 015:301.885 JLINK_SetSpeed(5000)
+T0668 015:301.935 - 0.050ms
+T0668 015:301.953 JLINK_HasError()
+T0668 015:301.961 JLINK_SetResetType(JLINKARM_RESET_TYPE_NORMAL)
+T0668 015:301.966 - 0.005ms returns JLINKARM_RESET_TYPE_NORMAL
+T0668 015:301.973 JLINK_Reset()
+T0668 015:302.068   
+  ***** Error: 
+T0668 015:302.078   No CPU core or target device has been selected. Please make sure at least the core J-Link shall connect to, is selected.
+T0668 015:302.087 - 0.114ms
+T0668 015:302.096 JLINK_GetIdData(pIdData)
+T0668 015:302.187   
+  ***** Error: 
+T0668 015:302.197   No CPU core or target device has been selected. Please make sure at least the core J-Link shall connect to, is selected.
+T0668 015:302.204 - 0.107ms
+T0668 015:302.211 JLINK_GetIdData(pIdData)
+T0668 015:302.300   
+  ***** Error: 
+T0668 015:302.309   No CPU core or target device has been selected. Please make sure at least the core J-Link shall connect to, is selected.
+T0668 015:302.317 - 0.106ms
+T0668 015:305.115 JLINK_GetFirmwareString(...)
+T0668 015:305.132 - 0.017ms
+T0668 016:395.541 JLINK_Close()
+T0668 016:407.194 - 11.647ms
+T0668 016:407.250   
+T0668 016:407.256   Closed
