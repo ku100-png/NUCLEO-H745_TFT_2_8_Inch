@@ -23,6 +23,11 @@
 #include "fatfs.h"
 #include "fatfs_sd.h"
 #include "fatfs_storage.h"
+#include "BH1750.h"
+#include "HTU21D.h"
+#include "BMP280.h"
+#include "ESP8266.h"
+#include "iocontrol.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -116,9 +121,14 @@ ETH_HandleTypeDef heth;
 
 SPI_HandleTypeDef hspi1;
 
+I2C_HandleTypeDef hi2c1;
+
 UART_HandleTypeDef huart3;
+UART_HandleTypeDef huart6;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
+
+ADC_HandleTypeDef hadc1;
 
 /* USER CODE BEGIN PV */
 char* pDirectoryFiles[MAX_BMP_FILES];
@@ -131,12 +141,22 @@ char SD_Path[4]; /* SD card logical drive path */
 
 uint8_t DemoIndex = 0;
 
+BMP280_HandleTypedef bmp280;
+float pressure, temperature, humidity, pressure_mm;
+uint16_t size;
+uint8_t Data[512];
+uint8_t BuffString[256];
+
+extern Wifi_t	Wifi;
+
+
 BSP_DemoTypedef  BSP_examples[]=
 {
   {Demo_DrawGraphic, 	"DrawGraphic", 	0},
   {Demo_ShowImages, 	"ShowImages", 	0},
   {Demo_Touchscreen, 	"Touchscreen", 	0},
 	{Demo_SDwriteFile, 	"SDwriteFile", 	0},
+	{Demo_ClimatParam, 	"ClimatParam",	0},
 };
 /* USER CODE END PV */
 
@@ -145,12 +165,16 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ETH_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_I2C1_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_USART6_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 static void display_images(void);
 static void SDCard_Config(void);
 //static void SDCard_Test(void);
+uint16_t map(uint16_t value, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
 
 /* USER CODE END PFP */
 
@@ -221,28 +245,31 @@ int main(void)
   MX_GPIO_Init();
   MX_ETH_Init();
   MX_SPI1_Init();
+	MX_I2C1_Init();
   MX_USART3_UART_Init();
+	MX_USART6_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
-
+	MX_ADC1_Init();
 	MX_FATFS_Init();
+	DWT_Delay_Init();
   
 	/* Initialize User_Button on STM32H7xx-Nucleo ------------------*/
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 	
 	/* USER CODE BEGIN 2 */
-	HAL_Delay(100);
+	HAL_Delay(1000);
 	driver_init();	// LCD Init
-		
+	
 	/* Configure SD card */
 	SDCard_Config();
-
+	
 	HAL_GPIO_WritePin(LED2_GPIO, LED2_PIN, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED3_GPIO, LED3_PIN, GPIO_PIN_SET);
 	
 	lcd_display_string(50, 16, (const uint8_t *)"STM32H745ZI-Q", 16, RED);
 	lcd_display_string(20, 48, (const uint8_t *)"Drivers examples:", 16, RED);
 	
-	for(uint8_t i=0; i<4; i++)
+	for(uint8_t i=0; i<5; i++)
   {
 		lcd_display_string(50, 64+(16*i), (const uint8_t *)BSP_examples[DemoIndex].DemoName, 16, RED);
 		DemoIndex++;
@@ -252,7 +279,7 @@ int main(void)
 	/* 0. Wait for User button to be pressed -------------------------------------*/
   while(CheckForUserInput() == 0)
   {}
-	DemoIndex = 0;
+	DemoIndex = 4;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -425,6 +452,54 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x10C0ECFF;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
@@ -469,6 +544,55 @@ static void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * @brief USART6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART6_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART6_Init 0 */
+
+  /* USER CODE END USART6_Init 0 */
+
+  /* USER CODE BEGIN USART6_Init 1 */
+
+  /* USER CODE END USART6_Init 1 */
+  huart6.Instance = USART6;
+  huart6.Init.BaudRate = 115200;
+  huart6.Init.WordLength = UART_WORDLENGTH_8B;
+  huart6.Init.StopBits = UART_STOPBITS_1;
+  huart6.Init.Parity = UART_PARITY_NONE;
+  huart6.Init.Mode = UART_MODE_TX_RX;
+  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart6.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart6.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart6.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart6, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart6, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART6_Init 2 */
+	__HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
+	//__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
+  /* USER CODE END USART6_Init 2 */
 
 }
 
@@ -584,6 +708,86 @@ static void MX_GPIO_Init(void)
 	GPIO_InitStruct.Pin = LED2_PIN;
 	HAL_GPIO_Init(LED2_GPIO, &GPIO_InitStruct);
 	
+	/* Capasitor sensor GPIO Configuration
+	PC10      ------> GND
+	PC12      ------> VCC
+	*/
+	GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_12;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);	// PC10 -> Low
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);	// PC12 -> Low
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_MultiModeTypeDef multimode = {0};
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_16B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DR;
+  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
+  hadc1.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure the ADC multi-mode
+  */
+  multimode.Mode = ADC_MODE_INDEPENDENT;
+  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_18;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_32CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  sConfig.OffsetSignedSaturation = DISABLE;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -812,6 +1016,263 @@ void Demo_SDwriteFile(void)
 
 
 /**
+  * @brief  Demo Show climatic parameters.
+  * @param  None
+  * @retval None
+  */
+void Demo_ClimatParam(void)
+{
+	static uint8_t x_coordinat = 0;
+	int16_t y_coordinat_l;
+	static int16_t y_coordinat_l_old = 290;
+	int16_t y_coordinat_t;
+	static int16_t y_coordinat_t_old = 290;
+	int16_t y_coordinat_h;
+	static int16_t y_coordinat_h_old = 290;
+	int16_t y_coordinat_c;
+	static int16_t y_coordinat_c_old = 290;
+	int16_t adc_value;
+	int16_t adc_value_maped;
+	uint8_t status;
+	
+	lcd_clear_screen(WHITE);
+	lcd_display_string(30, 0, (const uint8_t *)"Climatic parameters:", 16, BLACK);
+	lcd_display_string(0, 16, (const uint8_t *)"Cap soil sensor,%:", 16, BLACK);
+	lcd_display_string(0, 32, (const uint8_t *)"Illumination, Lux:", 16, BLACK);
+	lcd_display_string(0, 48, (const uint8_t *)"Temperature, C:", 16, BLACK);
+	lcd_display_string(0, 64, (const uint8_t *)"Humidity, %:", 16, BLACK);
+	lcd_display_string(145, 64, (const uint8_t *)"P, mm:", 16, BLACK);
+	lcd_display_string(0, 300, (const uint8_t *)"Press User Button to continue", 16, BLACK);
+	
+	lcd_draw_h_line(0, 90, 240, GRAY);
+	lcd_draw_h_line(0, 130, 240, GRAY);
+	lcd_draw_h_line(0, 170, 240, GRAY);
+	lcd_draw_h_line(0, 210, 240, GRAY);
+	lcd_draw_h_line(0, 250, 240, GRAY);
+	lcd_draw_h_line(0, 290, 240, BLACK);
+	
+	lcd_draw_v_line(40, 90, 202, GRAY);
+	lcd_draw_v_line(80, 90, 202, GRAY);
+	lcd_draw_v_line(120, 90, 202, GRAY);
+	lcd_draw_v_line(160, 90, 202, GRAY);
+	lcd_draw_v_line(200, 90, 202, GRAY);
+	lcd_draw_v_line(0, 90, 200, BLACK);
+	
+	begin(BH1750_CONTIN_HR_MODE, BH1750_I2CADDR, &hi2c1);
+	
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_SET);	// PC12 -> High
+	
+	//  Init BMP280
+	bmp280_init_default_params(&bmp280.params);
+	bmp280_init_i2c(&bmp280, BMP280_I2C_ADDRESS_0, &hi2c1);
+	if(bmp280_init(&bmp280, &bmp280.params)){
+		// BMP280 correct init
+		size = sprintf((char *)Data, "BMP280: correct init\n\r");	
+		HAL_UART_Transmit(&huart3, Data, size, 1000);
+	}
+	
+	// Wi-fi init
+	if(Wifi_Init()==false)
+	{
+		size = sprintf((char *)Data, "ESP8266: incorrect init\n\r");	
+		HAL_UART_Transmit(&huart3, Data, size, 1000);
+	}else{
+		size = sprintf((char *)Data, "ESP8266: correct init\n\r");	
+		HAL_UART_Transmit(&huart3, Data, size, 1000);
+	}
+	
+	//WifiMode_t m = WifiMode_Station;
+	Wifi_SetMode(WifiMode_Station);
+	
+	status = Wifi_Station_ConnectToAp("Umbrella_Corporation", "iD7qm3#1", NULL);
+	
+	if(!status){
+		size = sprintf((char *)Data, "ESP8266: Not connected to Wi-fi\n\r");	
+		HAL_UART_Transmit(&huart3, Data, size, 1000);
+	}
+	
+	Wifi_GetMyIp();
+	Wifi_TcpIp_SetMultiConnection(true);
+
+	while(1){
+		if(CheckForUserInput()){
+			x_coordinat = 0;
+			y_coordinat_l_old = 290;
+			y_coordinat_t_old = 290;
+			y_coordinat_h_old = 290;
+			y_coordinat_c_old = 290;
+			break;
+		}
+		
+		float Lux = readLightLevel();
+		float Temperature = HTU21D_Temperature_Measurement();
+		float Humidity = HTU21D_Humidity_Measurement();
+		
+		bmp280_read_float(&bmp280, &temperature, &pressure, &humidity);
+		pressure_mm = pressure*10/1333;
+		//size = sprintf((char *)Data,"Pressure: %.2f Pa, Temperature: %.2f C, Pressure in mm: %.2f mm\n\r", pressure, temperature, pressure_mm);
+		//HAL_UART_Transmit(&huart3, Data, size, 1000);
+		
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, 100);
+		adc_value = HAL_ADC_GetValue(&hadc1);
+		adc_value_maped = map(adc_value, 0, 65535, 100, 0);
+		adc_value_maped = map(adc_value_maped, 32, 85, 0, 100);
+		
+		char Lux_value[10];
+		sprintf(Lux_value, "%.1f", (float)Lux);
+		lcd_fill_rect(150, 32, 70, 16, WHITE);
+		lcd_display_string(150, 32, (const uint8_t *)Lux_value, 16, RED);
+		
+		char Temp_value[10];
+		sprintf(Temp_value, "%.1f", (float)Temperature);
+		lcd_fill_rect(150, 48, 70, 16, WHITE);
+		lcd_display_string(150, 48, (const uint8_t *)Temp_value, 16, BLUE);
+		
+		char Humid_value[10];
+		sprintf(Humid_value, "%.1f", (float)Humidity);
+		lcd_fill_rect(100, 64, 40, 16, WHITE);
+		lcd_display_string(100, 64, (const uint8_t *)Humid_value, 16, MAGENTA);
+		
+		char ADC_value[10];
+		sprintf(ADC_value, "%d", (uint16_t)adc_value_maped);
+		lcd_fill_rect(150, 16, 70, 16, WHITE);
+		lcd_display_string(150, 16, (const uint8_t *)ADC_value, 16, BROWN);
+		
+		char P_value[10];
+		sprintf(P_value, "%.1f", (float)pressure_mm);
+		lcd_fill_rect(195, 64, 40, 16, WHITE);
+		lcd_display_string(195, 64, (const uint8_t *)P_value, 16, GRAY);
+		
+		y_coordinat_l = (int16_t)(-1*(Lux*4/10 - 290));
+		y_coordinat_t = (int16_t)(-1*(Temperature*4 - 290));
+		y_coordinat_h = (int16_t)(-1*(Humidity*4/2 - 290));
+		y_coordinat_c = (int16_t)(-1*(adc_value_maped*4/2 - 290));
+		
+		if(x_coordinat >= 240) x_coordinat = 0;
+		
+		if(y_coordinat_l < 90) y_coordinat_l = 90;
+		if(y_coordinat_l > 290) y_coordinat_l = 290;
+		
+		if(y_coordinat_t < 90) y_coordinat_t = 90;
+		if(y_coordinat_t > 290) y_coordinat_t = 290;
+		
+		if(y_coordinat_h < 90) y_coordinat_h = 90;
+		if(y_coordinat_h > 290) y_coordinat_h = 290;
+		
+		if(y_coordinat_c < 90) y_coordinat_c = 90;
+		if(y_coordinat_c > 290) y_coordinat_c = 290;
+		
+		if(x_coordinat >= 30 && x_coordinat < 40){
+			lcd_fill_rect(x_coordinat+1, 91, 39-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 131, 39-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 171, 39-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 211, 39-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 251, 39-x_coordinat, 39, WHITE);
+			
+			lcd_fill_rect(40+1, 91, x_coordinat-30, 39, WHITE);
+			lcd_fill_rect(40+1, 131, x_coordinat-30, 39, WHITE);
+			lcd_fill_rect(40+1, 171, x_coordinat-30, 39, WHITE);
+			lcd_fill_rect(40+1, 211, x_coordinat-30, 39, WHITE);
+			lcd_fill_rect(40+1, 251, x_coordinat-30, 39, WHITE);
+		}else if(x_coordinat >= 70 && x_coordinat < 80){
+			lcd_fill_rect(x_coordinat+1, 91, 79-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 131, 79-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 171, 79-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 211, 79-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 251, 79-x_coordinat, 39, WHITE);
+			
+			lcd_fill_rect(80+1, 91, x_coordinat-70, 39, WHITE);
+			lcd_fill_rect(80+1, 131, x_coordinat-70, 39, WHITE);
+			lcd_fill_rect(80+1, 171, x_coordinat-70, 39, WHITE);
+			lcd_fill_rect(80+1, 211, x_coordinat-70, 39, WHITE);
+			lcd_fill_rect(80+1, 251, x_coordinat-70, 39, WHITE);
+		}else if(x_coordinat >= 110 && x_coordinat < 120){
+			lcd_fill_rect(x_coordinat+1, 91, 119-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 131, 119-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 171, 119-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 211, 119-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 251, 119-x_coordinat, 39, WHITE);
+			
+			lcd_fill_rect(120+1, 91, x_coordinat-110, 39, WHITE);
+			lcd_fill_rect(120+1, 131, x_coordinat-110, 39, WHITE);
+			lcd_fill_rect(120+1, 171, x_coordinat-110, 39, WHITE);
+			lcd_fill_rect(120+1, 211, x_coordinat-110, 39, WHITE);
+			lcd_fill_rect(120+1, 251, x_coordinat-110, 39, WHITE);
+		}else if(x_coordinat >= 150 && x_coordinat < 160){
+			lcd_fill_rect(x_coordinat+1, 91, 159-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 131, 159-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 171, 159-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 211, 159-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 251, 159-x_coordinat, 39, WHITE);
+			
+			lcd_fill_rect(160+1, 91, x_coordinat-150, 39, WHITE);
+			lcd_fill_rect(160+1, 131, x_coordinat-150, 39, WHITE);
+			lcd_fill_rect(160+1, 171, x_coordinat-150, 39, WHITE);
+			lcd_fill_rect(160+1, 211, x_coordinat-150, 39, WHITE);
+			lcd_fill_rect(160+1, 251, x_coordinat-150, 39, WHITE);
+		}else if(x_coordinat >= 190 && x_coordinat < 200){
+			lcd_fill_rect(x_coordinat+1, 91, 199-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 131, 199-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 171, 199-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 211, 199-x_coordinat, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 251, 199-x_coordinat, 39, WHITE);
+			
+			lcd_fill_rect(200+1, 91, x_coordinat-190, 39, WHITE);
+			lcd_fill_rect(200+1, 131, x_coordinat-190, 39, WHITE);
+			lcd_fill_rect(200+1, 171, x_coordinat-190, 39, WHITE);
+			lcd_fill_rect(200+1, 211, x_coordinat-190, 39, WHITE);
+			lcd_fill_rect(200+1, 251, x_coordinat-190, 39, WHITE);
+		}else{
+			lcd_fill_rect(x_coordinat+1, 91, 10, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 131, 10, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 171, 10, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 211, 10, 39, WHITE);
+			lcd_fill_rect(x_coordinat+1, 251, 10, 39, WHITE);
+		}
+		
+		lcd_draw_h_line(0, 90, 240, GRAY);
+		lcd_draw_h_line(0, 130, 240, GRAY);
+		lcd_draw_h_line(0, 170, 240, GRAY);
+		lcd_draw_h_line(0, 210, 240, GRAY);
+		lcd_draw_h_line(0, 250, 240, GRAY);
+		lcd_draw_h_line(0, 290, 240, BLACK);
+		
+		lcd_draw_v_line(40, 90, 202, GRAY);
+		lcd_draw_v_line(80, 90, 202, GRAY);
+		lcd_draw_v_line(120, 90, 202, GRAY);
+		lcd_draw_v_line(160, 90, 202, GRAY);
+		lcd_draw_v_line(200, 90, 202, GRAY);
+		lcd_draw_v_line(0, 90, 200, BLACK);
+		
+		lcd_draw_line(x_coordinat, y_coordinat_l_old, x_coordinat+2, y_coordinat_l, RED);
+		lcd_draw_line(x_coordinat, y_coordinat_t_old, x_coordinat+2, y_coordinat_t, BLUE);
+		lcd_draw_line(x_coordinat, y_coordinat_h_old, x_coordinat+2, y_coordinat_h, MAGENTA);
+		lcd_draw_line(x_coordinat, y_coordinat_c_old, x_coordinat+2, y_coordinat_c, BROWN);
+		
+		x_coordinat = x_coordinat + 2;
+		
+		y_coordinat_l_old = y_coordinat_l;
+		y_coordinat_t_old = y_coordinat_t;
+		y_coordinat_h_old = y_coordinat_h;
+		y_coordinat_c_old = y_coordinat_c;
+		
+		// Обмен данными с https://iocontrol.ru
+		//status = ReadInt_from_iocontrol("first_panel", "uint8_1");
+		
+		status = SendInt_to_iocontrol("Climatica_panel", "Soil_Humidity", adc_value_maped);
+		status = SendFloat_to_iocontrol("Climatica_panel", "Air_Humidity", Humidity);
+		status = SendFloat_to_iocontrol("Climatica_panel", "Air_Temperature", Temperature);
+		status = SendFloat_to_iocontrol("Climatica_panel", "Illumination_Lux", Lux);
+		status = SendFloat_to_iocontrol("Climatica_panel", "Pressure_mm", pressure_mm);
+
+
+		HAL_Delay(2000);
+	}
+}
+
+
+/**
   * @brief  Check for user input.
   * @param  None
   * @retval Input state (1 : active / 0 : Inactive)
@@ -853,7 +1314,35 @@ void Error_Handler(void)
   */
 void BSP_PB_Callback(Button_TypeDef Button){
 	DemoIndex++;
-	if(DemoIndex > 3) DemoIndex = 0;
+	if(DemoIndex > 4) DemoIndex = 0;
+}
+
+/**
+  * @brief  Функция пропорцианального переноса значения из старого диапазона в новый
+  * @param  текущее значение, границы старого и нового диапазонов
+  * @retval Значение для переноса в границы нового диапазона
+  */
+uint16_t map(uint16_t value, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max){
+	return(uint16_t)(value - in_min)*(out_max - out_min)/(in_max - in_min) + out_min;
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart->Instance == USART6){
+		// USART6 завершил прием данных
+		Wifi_RxCallBack();
+	}
+}
+
+void HAL_UART_ErrorCallBack(UART_HandleTypeDef *huart){
+		if(huart->Instance == USART6){
+		// USART6 завершил прием данных
+		size = sprintf((char *)Data,"USART6 ErrorCallBack\n\r");
+		HAL_UART_Transmit(&huart3, Data, size, 1000);
+		
+		HAL_UART_Receive_IT(&huart6, &Wifi.usartBuff, 1);
+	}
 }
 
 

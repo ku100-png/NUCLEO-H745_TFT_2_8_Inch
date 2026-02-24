@@ -71,6 +71,7 @@ void Demo_DrawGraphic(void);
 void Demo_ShowImages(void);
 void Demo_Touchscreen(void);
 void Demo_SDwriteFile(void);
+void Demo_ClimatParam(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

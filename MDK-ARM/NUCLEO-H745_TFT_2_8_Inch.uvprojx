@@ -564,6 +564,31 @@
               <FileType>1</FileType>
               <FilePath>..\Drivers\diskio_spi\fatfs_sd.c</FilePath>
             </File>
+            <File>
+              <FileName>BH1750.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\BH1750.c</FilePath>
+            </File>
+            <File>
+              <FileName>HTU21D.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\HTU21D.c</FilePath>
+            </File>
+            <File>
+              <FileName>BMP280.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\BMP280.c</FilePath>
+            </File>
+            <File>
+              <FileName>ESP8266.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\ESP8266.c</FilePath>
+            </File>
+            <File>
+              <FileName>iocontrol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\iocontrol.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -958,6 +983,16 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_adc_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_adc_ex.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1600,6 +1635,31 @@
               <FileType>1</FileType>
               <FilePath>..\Drivers\diskio_spi\fatfs_sd.c</FilePath>
             </File>
+            <File>
+              <FileName>BH1750.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\BH1750.c</FilePath>
+            </File>
+            <File>
+              <FileName>HTU21D.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\HTU21D.c</FilePath>
+            </File>
+            <File>
+              <FileName>BMP280.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\BMP280.c</FilePath>
+            </File>
+            <File>
+              <FileName>ESP8266.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\ESP8266.c</FilePath>
+            </File>
+            <File>
+              <FileName>iocontrol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CM7\Core\Src\iocontrol.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1739,6 +1799,16 @@
               <FileName>stm32h7xx_ll_usb.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_adc_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_adc_ex.c</FilePath>
             </File>
           </Files>
         </Group>

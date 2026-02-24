@@ -165,6 +165,9 @@ int32_t  BSP_PB_GetState(Button_TypeDef Button);
 void     BSP_PB_IRQHandler(Button_TypeDef Button);
 void     BSP_PB_Callback(Button_TypeDef Button);
 
+uint32_t DWT_Delay_Init(void);
+void DWT_Delay_us(volatile uint32_t microseconds);
+
 #endif
 
 /*--------------------------------END OF FILE---------------------------------*/
